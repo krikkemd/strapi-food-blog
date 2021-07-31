@@ -1,7 +1,6 @@
 import { useQuery } from '@apollo/client';
 import { useRouter } from 'next/router';
 import { GET_RESTAURANT_DISHES } from '../../graphql/restaurants';
-import Image from 'next/image';
 
 import { Button, Card, CardTitle, CardText, CardImg, Col, Row, CardBody } from 'reactstrap';
 
@@ -24,24 +23,25 @@ export default function restaurants() {
         <h1>{restaurant.name}</h1>
         <Row>
           {restaurant.dishes.map(dish => (
-            <Col xs='6' sm='4' style={{ padding: 0 }} key={dish.id}>
+            <Col xs='6' sm='4' key={dish.id}>
               <Card style={{ margin: '0 0.5rem 20px 0.5rem' }}>
+                {/* Image */}
+                <CardImg
+                  top={true}
+                  style={{ height: 250 }}
+                  src={`${process.env.NEXT_PUBLIC_API_URL}${dish.image.url}`}
+                  alt='Dish Picture'
+                />
+
                 <CardBody>
-                  <CardImg
-                    top={true}
-                    style={{ height: 250 }}
-                    src={`${process.env.NEXT_PUBLIC_API_URL}${dish.image.url}`}
-                    alt='Dish Picture'
-                  />
-                  {/* <Image
-                    height={250}
-                    width={250}
-                    src={`${process.env.NEXT_PUBLIC_API_URL}${dish.image.url}`}
-                    // placeholder={blur}
-                  /> */}
+                  {/* Name  */}
                   <CardTitle>{dish.name}</CardTitle>
+
+                  {/* Description */}
                   <CardText style={{ height: 100 }}>{dish.description}</CardText>
                 </CardBody>
+
+                {/* Button */}
                 <Button color='primary'>+ Add to Card</Button>
 
                 <style jsx>
