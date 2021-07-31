@@ -8,7 +8,10 @@ import { Card, CardBody, CardImg, CardText, CardTitle, Col, Row } from 'reactstr
 export default function RestaurantList(props) {
   const { error, loading, data } = useQuery(GET_ALL_RESTAURANTS);
 
-  if (error) return 'Error loading restaurants';
+  if (error) {
+    console.log(error);
+    return 'Error loading restaurants';
+  }
   // if restaurants are returned from the GraphQL query, run the filter query
   // and set equal to variable restaurantSearch
 
@@ -36,7 +39,7 @@ export default function RestaurantList(props) {
                   <CardText>{res.description.substring(0, 250) + '...'}</CardText>
                 </CardBody>
                 <div className='card-footer'>
-                  <Link as={`/restaurants/${res.id}`} href={`/restaurants?id=${res.id}`}>
+                  <Link as={`restaurants/${res.id}`} href={`restaurants/${res.id}`}>
                     <a className='btn btn-primary'>View</a>
                   </Link>
                 </div>
