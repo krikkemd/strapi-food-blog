@@ -12,8 +12,10 @@ export default function Login() {
   const [values, setValues] = useState(initialState);
 
   const [loginUser] = useMutation(LOGIN, {
+    update(_, res) {
+      console.log(res);
+    },
     onCompleted(data) {
-      console.log(data);
       setValues(initialState);
       setAccessTokenInMemory(data.login.jwt);
     },
