@@ -17,7 +17,7 @@ export default function Login() {
     },
     onCompleted(data) {
       setValues(initialState);
-      setAccessTokenInMemory(data.login.jwt);
+      // setAccessTokenInMemory(data.login.jwt);
     },
     onError(error) {
       console.log(error);

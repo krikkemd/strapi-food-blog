@@ -11,9 +11,12 @@ export default function restaurants() {
 
   const { error, loading, data } = useQuery(GET_RESTAURANT_DISHES, {
     variables: { id },
+    onError(error) {
+      console.log(error.graphQLErrors);
+    },
   });
 
-  if (error) return <h1>Error fetching dishes..</h1>;
+  if (error) return <h2>Error fetching dishes: {error.graphQLErrors[0].message}</h2>;
   if (loading) return <h1>Fetching dishes..</h1>;
 
   if (data.restaurant) {
