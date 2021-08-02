@@ -18,6 +18,7 @@ const formatError = (error) => [
   { messages: [{ id: error.id, message: error.message, field: error.field }] },
 ];
 
+console.log("route handlers:");
 module.exports = {
   async callback(ctx) {
     const provider = ctx.params.provider || "local";
