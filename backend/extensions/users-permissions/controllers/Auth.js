@@ -18,9 +18,73 @@ const formatError = (error) => [
   { messages: [{ id: error.id, message: error.message, field: error.field }] },
 ];
 
-console.log("route handlers:");
+// const generateRefreshToken = (user) => {
+//   return strapi.plugins["users-permissions"].services.jwt.issue(
+//     {
+//       tkv: user.tokenVersion, // Token Version
+//     },
+//     {
+//       subject: user.id.toString(),
+//       expiresIn: "60d",
+//     }
+//   );
+// };
+// const generateRefreshToken = (user) => {
+//   return strapi.plugins["users-permissions"].services.jwt.issue(
+//     {
+//       tkv: user.tokenVersion, // Token Version
+//     },
+//     {
+//       subject: user.id.toString(),
+//       expiresIn: "60d",
+//     }
+//   );
+// };
+
+const sendRefCookie = (ctx, token) => {
+  return ctx.cookies.set("refCookie", token, {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === "production" ? true : false,
+
+    // path: "/refresh_token",
+    sameSite: true,
+    expires: new Date(Date.now() + 1 * 3600000), // 1 hour
+  });
+};
+
+// Route handlers
 module.exports = {
+  async refreshToken(ctx) {
+    console.log("running refreshtoken ROUTE");
+    console.log(ctx);
+
+    const token = ctx.cookies.get("token");
+    console.log(token);
+
+    // ctx.cookies.set("token", token, {
+    //   httpOnly: true,
+    //   secure: process.env.NODE_ENV === "production" ? true : false,
+    //   maxAge: 1000 * 60 * 60 * 24 * 14, // 14 Day Age
+    //   domain:
+    //     process.env.NODE_ENV === "development"
+    //       ? "localhost"
+    //       : process.env.PRODUCTION_URL,
+    // });
+
+    // Refresh token
+    ctx.send({
+      refreshed: true,
+    });
+  },
+  async revoke(ctx) {
+    // Refresh token
+    ctx.send({
+      revoked: true,
+    });
+  },
+
   async callback(ctx) {
+    console.log("running callback - callback seems to be login");
     const provider = ctx.params.provider || "local";
     const params = ctx.request.body;
 
@@ -132,10 +196,20 @@ module.exports = {
           })
         );
       } else {
+        console.log("LOGIN USER");
+
+        const token = strapi.plugins["users-permissions"].services.jwt.issue({
+          id: user.id,
+        });
+
+        // Send refresh cookie
+        sendRefCookie(ctx, token);
+
         ctx.send({
-          jwt: strapi.plugins["users-permissions"].services.jwt.issue({
-            id: user.id,
-          }),
+          // jwt: strapi.plugins["users-permissions"].services.jwt.issue({
+          //   id: user.id,
+          // }),
+          status: "Authenticated",
           user: sanitizeEntity(user.toJSON ? user.toJSON() : user, {
             model: strapi.query("user", "users-permissions").model,
           }),
