@@ -10,6 +10,19 @@ module.exports = async (ctx, next) => {
     return next();
   }
 
+  /* 
+  Checks if the ctx.request and ctx.request.header are not undefined values, and then checks that ctx.request.header.authorization is undefined
+  If all of the above comes back as true, we then pull the token from the cookie using the ctx.cookies.get() method and assign it to the token variable.
+  If the token is not undefined, we modify ctx.request.header.authorization to act as a Bearer Token header to let the rest of the business logic know that we are an authenticated user.
+*/
+
+  if (ctx.request && ctx.request.header && !ctx.request.header.authorization) {
+    const token = ctx.cookies.get("refCookie");
+    if (token) {
+      ctx.request.header.authorization = "Bearer " + token;
+    }
+  }
+
   if (ctx.request && ctx.request.header && ctx.request.header.authorization) {
     try {
       const { id } = await strapi.plugins[

@@ -20,7 +20,7 @@ const authLink = setContext((_, { headers }) => {
 });
 
 const link = new HttpLink({
-  // credentials: 'include',
+  credentials: 'include',
   uri: `${API_URL}/graphql`,
 });
 
