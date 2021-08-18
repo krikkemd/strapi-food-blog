@@ -33,37 +33,12 @@ const authReducer = (state, action) => {
 
 function AuthProvider(props) {
   const [state, dispatch] = useReducer(authReducer, initialState);
-  //   const [loading, setLoading] = useState(true);
 
-  //   const fetchMe = () => {
-  //     console.log('running fetchMe');
-  //     fetch(`${process.env.NEXT_PUBLIC_API_URL}/users/me`, {
-  //       credentials: 'include',
-  //     })
-  //       .then(async res => {
-  //         if (!res.ok) {
-  //           dispatch({ type: LOGOUT_USER });
-  //           setLoading(false);
-  //           return null;
-  //         }
-
-  //         const data = await res.json();
-  //         console.log(data);
-  //         setLoading(false);
-  //       })
-  //       .catch(error => {
-  //         console.log(error);
-  //         setLoading(false);
-  //       });
-  //   };
-
-  //   useEffect(() => {
-  //     fetchMe();
-  //   }, []);
-
+  // Fetch http://localhost:1337/users/me
   const { error, loading, data } = useQuery(ME, {
     onCompleted(data) {
       console.log(data);
+      contextLogin(data.me);
     },
     onError(error) {
       dispatch({ type: LOGOUT_USER });

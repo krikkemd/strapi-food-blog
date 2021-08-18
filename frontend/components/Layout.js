@@ -1,4 +1,7 @@
-import React from 'react';
+import React, { useContext } from 'react';
+
+// Context
+import { AuthContext } from '../context/AuthContext';
 
 // Next
 import Head from 'next/head';
@@ -9,6 +12,8 @@ import { Container, Nav, NavItem } from 'reactstrap';
 
 export default function Layout(props) {
   const title = 'Welcome to Nextjs';
+  const { contextLogout, user } = useContext(AuthContext);
+
   return (
     <div>
       <Head>
@@ -39,15 +44,29 @@ export default function Layout(props) {
           </NavItem>
 
           <NavItem className='ml-auto'>
-            <Link href='/login'>
-              <a className='nav-link'>Login</a>
-            </Link>
+            {user ? (
+              <Link href='/'>
+                <a className='nav-link'>{user.username}</a>
+              </Link>
+            ) : (
+              <Link href='/login'>
+                <a className='nav-link'>Login</a>
+              </Link>
+            )}
           </NavItem>
 
           <NavItem>
-            <Link href='/register'>
-              <a className='nav-link'>Sign Up</a>
-            </Link>
+            {user ? (
+              <Link href='/'>
+                <a className='nav-link' onClick={contextLogout}>
+                  Logout
+                </a>
+              </Link>
+            ) : (
+              <Link href='/register'>
+                <a className='nav-link'>Sign Up</a>
+              </Link>
+            )}
           </NavItem>
         </Nav>
       </header>
