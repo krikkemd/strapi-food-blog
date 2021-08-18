@@ -5,18 +5,21 @@ import { GET_RESTAURANT_DISHES } from '../../graphql/restaurants';
 import { Button, Card, CardTitle, CardText, CardImg, Col, Row, CardBody } from 'reactstrap';
 
 export default function restaurants() {
-  const {
-    query: { id },
-  } = useRouter();
+  const router = useRouter();
+  const restaurantId = router.query.id;
 
   const { error, loading, data } = useQuery(GET_RESTAURANT_DISHES, {
-    variables: { id },
+    variables: { id: restaurantId },
     onError(error) {
+      console.log(error);
       console.log(error.graphQLErrors);
+    },
+    onCompleted(data) {
+      console.log(data);
     },
   });
 
-  if (error) return <h2>Error fetching dishes: {error.graphQLErrors[0].message}</h2>;
+  if (error) return <h2>Error fetching dishes: {error.graphQLErrors[0]?.message}</h2>;
   if (loading) return <h1>Fetching dishes..</h1>;
 
   if (data.restaurant) {

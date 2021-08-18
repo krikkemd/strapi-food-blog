@@ -48,7 +48,8 @@ const sendRefCookie = (ctx, token) => {
 
     // path: "/refresh_token",
     sameSite: true,
-    expires: new Date(Date.now() + 1 * 3600000), // 1 hour
+    // expires: new Date(Date.now() + 1 * 3600000), // 1 hour
+    maxAge: 1000 * 60 * 60 * 24 * 1, // 1 Day Age
   });
 };
 

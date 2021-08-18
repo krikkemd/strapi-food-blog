@@ -1,23 +1,30 @@
-import { useState } from 'react';
+import { useContext, useState } from 'react';
 import { Button, Form, FormGroup, Label, Input, FormText } from 'reactstrap';
 import { useMutation } from '@apollo/client';
+import { AuthContext } from '../context/AuthContext';
 import { LOGIN } from '../graphql/users';
 import { setAccessTokenInMemory } from '../util/accessToken';
 
 export default function Login() {
+  // Local state
   const initialState = {
     username: '',
     password: '',
   };
   const [values, setValues] = useState(initialState);
 
+  // Context
+  const { contextLogin } = useContext(AuthContext);
+
   const [loginUser] = useMutation(LOGIN, {
     update(_, res) {
-      console.log(res);
+      // console.log(res);
     },
     onCompleted(data) {
       setValues(initialState);
       // setAccessTokenInMemory(data.login.jwt);
+      console.log(data);
+      contextLogin(data.login.user);
     },
     onError(error) {
       console.log(error);
