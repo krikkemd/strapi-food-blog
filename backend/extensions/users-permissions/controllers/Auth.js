@@ -77,10 +77,28 @@ module.exports = {
       refreshed: true,
     });
   },
+
   async revoke(ctx) {
     // Refresh token
     ctx.send({
       revoked: true,
+    });
+  },
+
+  async logout(ctx) {
+    console.log("running logout from Auth.js");
+    ctx.cookies.set("refCookie", "", {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production" ? true : false,
+
+      // path: "/refresh_token",
+      sameSite: true,
+      maxAge: new Date(Date.now()),
+    });
+
+    ctx.send({
+      authorized: true,
+      message: "Successfully destroyed session",
     });
   },
 

@@ -2,6 +2,15 @@
     "routes": [
       {
         "method": "POST",
+        "path": "/auth/logout",
+        "handler": "Auth.logout",
+        "config": {
+          "policies": [],
+          "prefix": ""
+        }
+      },
+      {
+        "method": "POST",
         "path": "/auth/refreshToken",
         "handler": "Auth.refreshToken",
         "config": {
