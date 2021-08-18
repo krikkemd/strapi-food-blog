@@ -9,10 +9,25 @@ import Link from 'next/link';
 
 // React Strap
 import { Container, Nav, NavItem } from 'reactstrap';
+import { useMutation } from '@apollo/client';
+import { LOGOUT } from '../graphql/users';
 
 export default function Layout(props) {
   const title = 'Welcome to Nextjs';
   const { contextLogout, user } = useContext(AuthContext);
+
+  const [logout] = useMutation(LOGOUT, {
+    onCompleted: data => {
+      console.log(data);
+      contextLogout();
+    },
+    onError: error => console.log(error),
+  });
+
+  const handleLogout = e => {
+    e.preventDefault();
+    logout();
+  };
 
   return (
     <div>
@@ -58,7 +73,7 @@ export default function Layout(props) {
           <NavItem>
             {user ? (
               <Link href='/'>
-                <a className='nav-link' onClick={contextLogout}>
+                <a className='nav-link' onClick={handleLogout}>
                   Logout
                 </a>
               </Link>

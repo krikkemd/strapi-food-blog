@@ -25,6 +25,15 @@ export const LOGIN = gql`
   }
 `;
 
+export const LOGOUT = gql`
+  mutation LogoutUser {
+    logout {
+      authorized
+      message
+    }
+  }
+`;
+
 export const ME = gql`
   query Me {
     me {
