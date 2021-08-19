@@ -35,17 +35,17 @@ function AuthProvider(props) {
   const [state, dispatch] = useReducer(authReducer, initialState);
 
   // Fetch http://localhost:1337/users/me
-  const { error, loading, data } = useQuery(ME, {
-    onCompleted(data) {
-      console.log(data);
-      contextLogin(data.me);
-    },
-    onError(error) {
-      dispatch({ type: LOGOUT_USER });
-      console.log(error);
-      console.log(error.graphQLErrors);
-    },
-  });
+  // const { error, loading, data } = useQuery(ME, {
+  //   onCompleted(data) {
+  //     console.log(data);
+  //     contextLogin(data.me);
+  //   },
+  //   onError(error) {
+  //     dispatch({ type: LOGOUT_USER });
+  //     console.log(error);
+  //     console.log(error.graphQLErrors);
+  //   },
+  // });
 
   const contextLogin = userData => {
     console.log(userData);
@@ -54,7 +54,7 @@ function AuthProvider(props) {
 
   const contextLogout = () => dispatch({ type: LOGOUT_USER });
 
-  if (loading) return <h1>loading...</h1>;
+  // if (loading) return <h1>loading...</h1>;
 
   return (
     <AuthContext.Provider
