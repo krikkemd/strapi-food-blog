@@ -14,7 +14,7 @@ export default function Login() {
   const [values, setValues] = useState(initialState);
 
   // Context
-  const { contextLogin } = useContext(AuthContext);
+  const { contextLogin, refreshToken } = useContext(AuthContext);
 
   const [loginUser] = useMutation(LOGIN, {
     update(_, res) {
@@ -25,6 +25,7 @@ export default function Login() {
       // setAccessTokenInMemory(data.login.jwt);
       console.log(data);
       contextLogin(data.login.user);
+      refreshToken(true);
     },
     onError(error) {
       console.log(error);

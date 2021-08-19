@@ -8,17 +8,17 @@ import { getAccessTokenFromMemory } from '../util/accessToken';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:1337';
 
-// const authLink = setContext((_, { headers }) => {
-//   // accesToken is set after successful login, so we get it here, and add it to the headers for every next http request
-//   const accessToken = getAccessTokenFromMemory();
-//   console.log(`accessToken: ${accessToken}`);
-//   return {
-//     headers: {
-//       ...headers,
-//       authorization: accessToken && `Bearer ${accessToken}`,
-//     },
-//   };
-// });
+const authLink = setContext((_, { headers }) => {
+  // accesToken is set after successful login, so we get it here, and add it to the headers for every next http request
+  const accessToken = getAccessTokenFromMemory();
+  console.log(`accessToken: ${accessToken}`);
+  return {
+    headers: {
+      ...headers,
+      authorization: accessToken && `Bearer ${accessToken}`,
+    },
+  };
+});
 
 const link = new HttpLink({
   credentials: 'include',
@@ -26,8 +26,8 @@ const link = new HttpLink({
 });
 
 const client = new ApolloClient({
-  // link: concat(authLink, link),
-  link: link,
+  link: concat(authLink, link),
+  // link: link,
   cache: new InMemoryCache(),
 });
 

@@ -16,50 +16,51 @@ module.exports = async (ctx, next) => {
   If the token is not undefined, we modify ctx.request.header.authorization to act as a Bearer Token header to let the rest of the business logic know that we are an authenticated user.
 */
 
-  if (ctx.request && ctx.request.header && !ctx.request.header.authorization) {
-    const refToken = ctx.cookies.get("refCookie");
-    if (refToken) {
-      // console.log(refToken);
-      try {
-        // Unpack refresh token
-        const { tkv, iat, exp, sub } = await strapi.plugins[
-          "users-permissions"
-        ].services.jwt.verify(refToken);
+  //This is on every request
+  // if (ctx.request && ctx.request.header && !ctx.request.header.authorization) {
+  //   const refToken = ctx.cookies.get("refCookie");
+  //   if (refToken) {
+  //     // console.log(refToken);
+  //     try {
+  //       // Unpack refresh token
+  //       const { tkv, iat, exp, sub } = await strapi.plugins[
+  //         "users-permissions"
+  //       ].services.jwt.verify(refToken);
 
-        // Check if refresh token has expired
-        if (Date.now() / 1000 > exp)
-          return ctx.badRequest(null, "Expired refresh token");
+  //       // Check if refresh token has expired
+  //       if (Date.now() / 1000 > exp)
+  //         return ctx.badRequest(null, "Expired refresh token");
 
-        // fetch user based on subject
-        const user = await strapi
-          .query("user", "users-permissions")
-          .findOne({ id: sub });
+  //       // fetch user based on subject
+  //       const user = await strapi
+  //         .query("user", "users-permissions")
+  //         .findOne({ id: sub });
 
-        // Check here if user token version is the same as in refresh token
-        // This will ensure that the refresh token hasn't been made invalid by a password change or similar.
-        if (tkv !== user.tokenVersion)
-          return ctx.badRequest(null, "Refresh token is invalid");
+  //       // Check here if user token version is the same as in refresh token
+  //       // This will ensure that the refresh token hasn't been made invalid by a password change or similar.
+  //       if (tkv !== user.tokenVersion)
+  //         return ctx.badRequest(null, "Refresh token is invalid");
 
-        // Otherwise we are good to go.
+  //       // Otherwise we are good to go.
 
-        const accessToken = strapi.plugins[
-          "users-permissions"
-        ].services.jwt.issue(
-          { id: user.id },
-          {
-            expiresIn: "30s",
-          }
-        );
+  //       const accessToken = strapi.plugins[
+  //         "users-permissions"
+  //       ].services.jwt.issue(
+  //         { id: user.id },
+  //         {
+  //           expiresIn: "30s",
+  //         }
+  //       );
 
-        console.log(accessToken);
+  //       console.log(accessToken);
 
-        // send accessToken jwt = accessToken
-        ctx.request.header.authorization = "Bearer " + accessToken;
-      } catch (e) {
-        return ctx.badRequest(null, "Invalid token");
-      }
-    }
-  }
+  //       // send accessToken jwt = accessToken
+  //       ctx.request.header.authorization = "Bearer " + accessToken;
+  //     } catch (e) {
+  //       return ctx.badRequest(null, "Invalid token");
+  //     }
+  //   }
+  // }
 
   if (ctx.request && ctx.request.header && ctx.request.header.authorization) {
     try {

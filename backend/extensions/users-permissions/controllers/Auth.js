@@ -30,12 +30,21 @@ const generateRefreshToken = (user) => {
   );
 };
 
+const generateAccessToken = (user) => {
+  return strapi.plugins["users-permissions"].services.jwt.issue(
+    { id: user.id, username: user.username },
+    {
+      expiresIn: "30s",
+    }
+  );
+};
+
 const sendRefCookie = (ctx, token) => {
   return ctx.cookies.set("refCookie", token, {
     httpOnly: true,
     secure: process.env.NODE_ENV === "production" ? true : false,
 
-    // path: "/refresh_token",
+    path: "/auth/refreshToken",
     sameSite: true,
     // expires: new Date(Date.now() + 1 * 3600000), // 1 hour
     maxAge: 1000 * 60 * 60 * 24 * 1, // 1 Day Age
@@ -45,45 +54,50 @@ const sendRefCookie = (ctx, token) => {
 // Route handlers
 module.exports = {
   async refreshToken(ctx) {
-    const params = _.assign(ctx.request.body);
+    console.log("running refreshToken route handler");
+    if (
+      ctx.request &&
+      ctx.request.header &&
+      !ctx.request.header.authorization
+    ) {
+      const refToken = ctx.cookies.get("refCookie");
+      if (refToken) {
+        console.log("refcookie found!");
+        try {
+          // Unpack refresh token
+          const { tkv, iat, exp, sub } = await strapi.plugins[
+            "users-permissions"
+          ].services.jwt.verify(refToken);
 
-    console.log(params.renew);
+          // Check if refresh token has expired
+          if (Date.now() / 1000 > exp)
+            return ctx.badRequest(null, "Expired refresh token");
 
-    // Params should consist of:
-    // * token - string - jwt refresh token
-    // * renew - boolean - if true, also return an updated refresh token.
-    // Parse Token
+          // fetch user based on subject
+          const user = await strapi
+            .query("user", "users-permissions")
+            .findOne({ id: sub });
 
-    try {
-      // Unpack refresh token
-      const { tkv, iat, exp, sub } = await strapi.plugins[
-        "users-permissions"
-      ].services.jwt.verify(params.token);
+          // Check here if user token version is the same as in refresh token
+          // This will ensure that the refresh token hasn't been made invalid by a password change or similar.
+          if (tkv !== user.tokenVersion)
+            return ctx.badRequest(null, "Refresh token is invalid");
 
-      // Check if refresh token has expired
-      if (Date.now() / 1000 > exp)
-        return ctx.badRequest(null, "Expired refresh token");
+          // Otherwise we are good to go.
+          const accessToken = generateAccessToken(user);
 
-      // fetch user based on subject
-      const user = await strapi
-        .query("user", "users-permissions")
-        .findOne({ id: sub });
+          // Send refresh cookie
+          sendRefCookie(ctx, generateRefreshToken(user));
 
-      // Check here if user token version is the same as in refresh token
-      // This will ensure that the refresh token hasn't been made invalid by a password change or similar.
-      if (tkv !== user.tokenVersion)
-        return ctx.badRequest(null, "Refresh token is invalid");
-
-      // Otherwise we are good to go.
-      // send accessToken jwt = accessToken
-      ctx.send({
-        jwt: strapi.plugins["users-permissions"].services.jwt.issue({
-          id: user.id,
-        }),
-        refresh: params.renew ? generateRefreshToken(user) : null,
-      });
-    } catch (e) {
-      return ctx.badRequest(null, "Invalid token");
+          // Send the accessToken
+          ctx.send({
+            accessToken,
+          });
+        } catch (e) {
+          console.log(e);
+          return ctx.badRequest(null, "Invalid token");
+        }
+      }
     }
   },
 
@@ -135,7 +149,7 @@ module.exports = {
       httpOnly: true,
       secure: process.env.NODE_ENV === "production" ? true : false,
 
-      // path: "/refresh_token",
+      path: "/auth/refreshToken",
       sameSite: true,
       maxAge: new Date(Date.now()),
     });
