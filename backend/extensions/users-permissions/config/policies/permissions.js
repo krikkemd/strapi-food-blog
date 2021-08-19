@@ -25,6 +25,9 @@ module.exports = async (ctx, next) => {
 
   if (ctx.request && ctx.request.header && ctx.request.header.authorization) {
     try {
+      console.log("running line 28 permissions.js");
+      console.log("authorization header is present");
+      console.log(ctx.request.header.authorization);
       const { id } = await strapi.plugins[
         "users-permissions"
       ].services.jwt.getToken(ctx);
@@ -40,6 +43,8 @@ module.exports = async (ctx, next) => {
     } catch (err) {
       return handleErrors(ctx, err, "unauthorized");
     }
+
+    console.log(ctx.state.user);
 
     if (!ctx.state.user) {
       return handleErrors(ctx, "User Not Found", "unauthorized");

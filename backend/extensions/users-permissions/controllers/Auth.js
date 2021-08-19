@@ -18,28 +18,17 @@ const formatError = (error) => [
   { messages: [{ id: error.id, message: error.message, field: error.field }] },
 ];
 
-// const generateRefreshToken = (user) => {
-//   return strapi.plugins["users-permissions"].services.jwt.issue(
-//     {
-//       tkv: user.tokenVersion, // Token Version
-//     },
-//     {
-//       subject: user.id.toString(),
-//       expiresIn: "60d",
-//     }
-//   );
-// };
-// const generateRefreshToken = (user) => {
-//   return strapi.plugins["users-permissions"].services.jwt.issue(
-//     {
-//       tkv: user.tokenVersion, // Token Version
-//     },
-//     {
-//       subject: user.id.toString(),
-//       expiresIn: "60d",
-//     }
-//   );
-// };
+const generateRefreshToken = (user) => {
+  return strapi.plugins["users-permissions"].services.jwt.issue(
+    {
+      tkv: user.tokenVersion, // Token Version
+    },
+    {
+      subject: user.id.toString(),
+      expiresIn: "60d",
+    }
+  );
+};
 
 const sendRefCookie = (ctx, token) => {
   return ctx.cookies.set("refCookie", token, {
@@ -56,30 +45,47 @@ const sendRefCookie = (ctx, token) => {
 // Route handlers
 module.exports = {
   async refreshToken(ctx) {
-    console.log("running refreshtoken ROUTE");
-    console.log(ctx);
+    const params = _.assign(ctx.request.body);
 
-    const token = ctx.cookies.get("token");
-    console.log(token);
+    // Params should consist of:
+    // * token - string - jwt refresh token
+    // * renew - boolean - if true, also return an updated refresh token.
+    // Parse Token
 
-    // ctx.cookies.set("token", token, {
-    //   httpOnly: true,
-    //   secure: process.env.NODE_ENV === "production" ? true : false,
-    //   maxAge: 1000 * 60 * 60 * 24 * 14, // 14 Day Age
-    //   domain:
-    //     process.env.NODE_ENV === "development"
-    //       ? "localhost"
-    //       : process.env.PRODUCTION_URL,
-    // });
+    try {
+      // Unpack refresh token
+      const { tkv, iat, exp, sub } = await strapi.plugins[
+        "users-permissions"
+      ].services.jwt.verify(params.token);
 
-    // Refresh token
-    ctx.send({
-      refreshed: true,
-    });
+      // Check if refresh token has expired
+      if (Date.now() / 1000 > exp)
+        return ctx.badRequest(null, "Expired refresh token");
+
+      // fetch user based on subject
+      const user = await strapi
+        .query("user", "users-permissions")
+        .findOne({ id: sub });
+
+      // Check here if user token version is the same as in refresh token
+      // This will ensure that the refresh token hasn't been made invalid by a password change or similar.
+      if (tkv !== user.tokenVersion)
+        return ctx.badRequest(null, "Refresh token is invalid");
+
+      // Otherwise we are good to go.
+      // send accessToken
+      ctx.send({
+        jwt: strapi.plugins["users-permissions"].services.jwt.issue({
+          id: user.id,
+        }),
+        refresh: params.renew ? generateRefreshToken(user) : null,
+      });
+    } catch (e) {
+      return ctx.badRequest(null, "Invalid token");
+    }
   },
 
   async revoke(ctx) {
-    // Refresh token
     ctx.send({
       revoked: true,
     });
@@ -218,7 +224,8 @@ module.exports = {
         console.log("LOGIN USER");
 
         const token = strapi.plugins["users-permissions"].services.jwt.issue({
-          id: user.id,
+          // id: user.id,
+          refresh: generateRefreshToken(user),
         });
 
         // Send refresh cookie
@@ -228,6 +235,7 @@ module.exports = {
           // jwt: strapi.plugins["users-permissions"].services.jwt.issue({
           //   id: user.id,
           // }),
+          refresh: generateRefreshToken(user),
           status: "Authenticated",
           user: sanitizeEntity(user.toJSON ? user.toJSON() : user, {
             model: strapi.query("user", "users-permissions").model,
@@ -263,6 +271,7 @@ module.exports = {
       ctx.send({
         jwt: strapi.plugins["users-permissions"].services.jwt.issue({
           id: user.id,
+          refresh: generateRefreshToken(user),
         }),
         user: sanitizeEntity(user.toJSON ? user.toJSON() : user, {
           model: strapi.query("user", "users-permissions").model,
@@ -308,6 +317,7 @@ module.exports = {
       ctx.send({
         jwt: strapi.plugins["users-permissions"].services.jwt.issue({
           id: user.id,
+          refresh: generateRefreshToken(user),
         }),
         user: sanitizeEntity(user.toJSON ? user.toJSON() : user, {
           model: strapi.query("user", "users-permissions").model,
@@ -628,6 +638,7 @@ module.exports = {
 
       return ctx.send({
         jwt,
+        refresh: generateRefreshToken(user),
         user: sanitizedUser,
       });
     } catch (err) {
@@ -666,6 +677,7 @@ module.exports = {
     if (returnUser) {
       ctx.send({
         jwt: jwtService.issue({ id: user.id }),
+        refresh: generateRefreshToken(user),
         user: sanitizeEntity(user, {
           model: strapi.query("user", "users-permissions").model,
         }),
